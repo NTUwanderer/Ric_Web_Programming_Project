@@ -15,22 +15,22 @@
       <section class="main">
         <input class="toggle-all" type="checkbox">
         <label for="toggle-all">Mark all as complete</label>
-        <ul class="todo-list"></ul>
+        <ul id="todo-list" class="todo-list"></ul>
       </section>
       <footer class="footer">
-        <span class="todo-count"></span>
+        <span id="counter" class="todo-count">no item</span>
         <ul class="filters">
           <li>
-            <a href="#/" class="selected">All</a>
+            <a id="all_button" href="#/" class="selected">All</a>
           </li>
           <li>
-            <a href="#/active">Active</a>
+            <a id="active_button" href="#/active">Active</a>
           </li>
           <li>
-            <a href="#/completed">Completed</a>
+            <a id="complete_button" href="#/completed">Completed</a>
           </li>
         </ul>
-        <button class="clear-completed">Clear completed</button>
+        <button id="clear-complete" class="clear-completed">Clear completed</button>
       </footer>
     </section>
     <footer class="info">
@@ -41,6 +41,7 @@
     </footer>
 
     <script src="node_modules/todomvc-common/base.js"></script>
+    <script src="js/data.js"></script>
     <script src="js/control.js"></script>
 
   </body>
