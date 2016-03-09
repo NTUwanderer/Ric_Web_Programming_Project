@@ -23,19 +23,17 @@ document.getElementById('input_text').onkeypress = function(e) {
 }
 
 function addTodoInList(string, done) {
-	var complete = '';
 	var id = getTimeInMilli();
-	var li = getLi(id, string, done);
 	if (done === true) {
-		complete = 'complete';
 		addInDatas(id, string, true);
 	} else {
 		addInDatas(id, string, false);
 	}
-	list.appendChild(li);
-
-	check_all.checked = false;
-
+	if (state !== 1) {
+		var li = getLi(id, string, done);
+		list.appendChild(li);
+		check_all.checked = false;
+	}
 	refreshCount();
 }
 function getLi(id, content, done) {
@@ -49,7 +47,7 @@ function getLi(id, content, done) {
 	return li;
 }
 function getLiHTML(content) {
-	return	'<div class="view">' + 
+	return	'<div class="view change-color">' + 
 				'<input class="toggle" type="checkbox"></input>' + 
 				'<label>' + content + '</label>' + 
 				'<button class="destroy"></button>' + 
@@ -90,6 +88,24 @@ list.addEventListener('click', function(event) {
     	li.parentNode.removeChild(li);
   	}
 });
+
+// list.addEventListener('mouseover', function(event) {
+// 	var element = event.target;
+// 	console.log(element.nodeName);
+// 	if (element && element.nodeName === 'LI') {
+// 		element.style.backgroundColor = "rgb(72, 72, 72)";
+// 		element.style.color = 'white';
+// 	}
+// });
+
+// list.addEventListener('mouseleave', function(event) {
+// 	var element = event.target;
+// 	console.log(element.nodeName);
+// 	if (element && element.nodeName === 'UL') {
+// 		element.style.backgroundColor = 'white';
+// 		element.style.color = 'black';
+// 	}
+// });
 
 function cleanList() {
 	list.innerHTML = null;
