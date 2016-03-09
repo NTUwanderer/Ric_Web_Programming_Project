@@ -8,6 +8,8 @@ var all_button = document.getElementById('all_button');
 var active_button = document.getElementById('active_button');
 var complete_button = document.getElementById('complete_button');
 
+var check_all = document.getElementById('check_all');
+
 document.getElementById('input_text').onkeypress = function(e) {
 	if (!e) e = window.event;
     var keyCode = e.keyCode || e.which;
@@ -22,17 +24,17 @@ document.getElementById('input_text').onkeypress = function(e) {
 
 function addTodoInList(string, done) {
 	var complete = '';
-	var checked = '';
 	var id = getTimeInMilli();
 	var li = getLi(id, string, done);
 	if (done === true) {
 		complete = 'complete';
-		checked = 'checked';
 		addInDatas(id, string, true);
 	} else {
 		addInDatas(id, string, false);
 	}
 	list.appendChild(li);
+
+	check_all.checked = false;
 
 	refreshCount();
 }
@@ -68,24 +70,24 @@ function refreshCount() {
 }
 
 list.addEventListener('click', function(event) {
-  	var target = event.target;
-  	if (target && target.nodeName === 'INPUT' && target.className === 'toggle') {
-    	var liNode = target.parentNode.parentNode;
-    	var id = liNode.getAttribute('data-id');
-    	if (target.checked) {
-      		liNode.className = 'completed';
+  	var element = event.target;
+  	if (element && element.nodeName === 'INPUT' && element.className === 'toggle') {
+    	var li = element.parentNode.parentNode;
+    	var id = li.getAttribute('data-id');
+    	if (element.checked) {
+      		li.className = 'completed';
       		clickCheckBox(id, true);
     	} else {
-      		liNode.className = '';
+      		li.className = '';
       		clickCheckBox(id, false);
     	}
     	refreshCount();
-  	} else if (target && target.nodeName === 'BUTTON' && target.className === 'destroy') {
-    	var liNode = target.parentNode.parentNode;
-		var id = liNode.getAttribute('data-id');
+  	} else if (element && element.nodeName === 'BUTTON' && element.className === 'destroy') {
+    	var li = element.parentNode.parentNode;
+		var id = li.getAttribute('data-id');
 		deleteElement(id);
     	refreshCount();
-    	liNode.parentNode.removeChild(liNode);
+    	li.parentNode.removeChild(li);
   	}
 });
 
@@ -93,11 +95,11 @@ function cleanList() {
 	list.innerHTML = null;
 }
 
-function rebuildList(complete) {
+function rebuildList() {
 	cleanList();
 	for (var i = 0, length = datas.length; i < length; ++i) {
 		console.log(datas[i]);
-		if (complete == null || datas[i][2] == complete) {
+		if (state === 0 || (state === 1 && datas[i][2] === false) || (state === 2 && datas[i][2] === true)) {
 			var li = getLi(datas[i][0], datas[i][1], datas[i][2]);
 			list.appendChild(li);
 		}
@@ -116,9 +118,7 @@ function clearComplete() {
 		}
 	}
 	console.log(datas);
-	if (state === 0)		rebuildList(null);
-	else if (state === 1)	rebuildList(false);
-	else 					rebuildList(true);
+	rebuildList();
 }
 
 all_button.addEventListener('click', function() {
@@ -132,7 +132,7 @@ all_button.addEventListener('click', function() {
 	state = 0;
 	all_button.setAttribute('class', 'selected');
 
-	rebuildList(null);
+	rebuildList();
 });
 active_button.addEventListener('click', function() {
 	console.log('state' + state);
@@ -145,7 +145,7 @@ active_button.addEventListener('click', function() {
 	state = 1;
 	active_button.setAttribute('class', 'selected');
 
-	rebuildList(false);
+	rebuildList();
 });
 complete_button.addEventListener('click', function() {
 	console.log('state' + state);
@@ -158,9 +158,23 @@ complete_button.addEventListener('click', function() {
 	state = 2;
 	complete_button.setAttribute('class', 'selected');
 
-	rebuildList(true);
+	rebuildList();
 });
 
+check_all.addEventListener('click', checkAll);
 
+function checkAll() {
+	var checked = check_all.checked;
+	for (var i = 0, length = datas.length; i < length; ++i)
+		datas[i][2] = checked;
+	
+	if (checked)
+		count = 0;
+	else
+		count = datas.length;
+
+	rebuildList();
+	refreshCount();
+}
 
 
