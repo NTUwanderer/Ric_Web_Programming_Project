@@ -29,7 +29,7 @@ function addTodoInList(string, done) {
 	} else {
 		addInDatas(id, string, false);
 	}
-	if (state !== 1) {
+	if (state !== 2) {
 		var li = getLi(id, string, done);
 		list.appendChild(li);
 		check_all.checked = false;
@@ -73,11 +73,19 @@ list.addEventListener('click', function(event) {
     	var li = element.parentNode.parentNode;
     	var id = li.getAttribute('data-id');
     	if (element.checked) {
-      		li.className = 'completed';
       		clickCheckBox(id, true);
+    		if (state === 1) {
+    			list.removeChild(li);
+    		} else {
+    			li.className = 'completed';
+    		}
     	} else {
-      		li.className = '';
-      		clickCheckBox(id, false);
+    		clickCheckBox(id, false);
+    		if (state === 2) {
+    			list.removeChild(li);
+    		} else {
+    			li.className = '';
+    		}
     	}
     	refreshCount();
   	} else if (element && element.nodeName === 'BUTTON' && element.className === 'destroy') {
