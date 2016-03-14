@@ -8,7 +8,7 @@ function getType(object) {
 		if (object > 0 || object <= 0)	return "number";
 		return "NaN";
 	}
-	return typeof(object);
+	return type;
 }
 
 function counter() {
