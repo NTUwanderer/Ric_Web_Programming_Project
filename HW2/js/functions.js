@@ -33,3 +33,17 @@ function curringSum(num1) {
 		}
 	}
 }
+
+function currings(...array) {
+  	var value = 0, rest = 3;
+
+  	var func = function(...input) {
+  		rest -= input.length;
+    	if (rest < 0)  return null;
+    	input.forEach(v => value += v);
+    	if (rest === 0)	return value;
+    	else	return func;
+  	}
+
+  	return func(...array);
+}
