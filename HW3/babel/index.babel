@@ -1,0 +1,182 @@
+class TodoApp extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      uncomplete: 0,
+      selected: 0,
+      items: [
+        // id(number), string(string), complete(boolean)
+        
+      ]
+    };
+    this.update = this.update.bind(this);
+    this.check = this.check.bind(this);
+    this.destroy = this.destroy.bind(this);
+    this.clearComplete = this.clearComplete.bind(this);
+    this.myMap = this.myMap.bind(this);
+    this.changeSelected = this.changeSelected.bind(this);
+    this.selectAll = this.selectAll.bind(this);
+  }
+  update(e) {
+    if (!e) e = window.event;
+    let keyCode = e.keyCode || e.which;
+    if (keyCode === 13){
+    	let string = e.target.value;
+      console.log(string);
+      if (string !== "")
+        this.addTodo(string, false);
+    	e.target.value = "";
+    }
+  }
+  addTodo(string, completed) {
+    if (completed === false) {
+      ++(this.state.uncomplete);
+      ReactDOM.findDOMNode(this.refs.selectAllInput).checked = false;
+      console.log(ReactDOM.findDOMNode(this.refs.selectAllInput));
+    }
+    let id = getTimeInMilli();
+    let items = this.state.items;
+    items.push([id, string, completed]);
+    this.setState({items: items});
+    // let li = <TodoItem data_id={id} content={string} />;
+  }
+  check(id, complete) {
+    let uncomplete = this.state.uncomplete;
+    let items = this.state.items;
+    for (let i = 0, length = items.length; i < length; ++i) {
+		  if (items[i][0] == id) {
+			  if (items[i][2] === false)
+				  --uncomplete;
+			  items[i][2] = complete;
+			  if (items[i][2] === false)
+				  ++uncomplete;
+        this.setState({uncomplete: uncomplete, items: items});
+			  break;
+		  }
+	  }
+  }
+  destroy(id) {
+    let uncomplete = this.state.uncomplete;
+    let items = this.state.items;
+    for (let i = 0, length = items.length; i < length; ++i) {
+		  if (items[i][0] == id) {
+			  if (items[i][2] === false)
+				  --uncomplete;
+        items.splice(i, 1);
+        this.setState({uncomplete: uncomplete, items: items});
+			  break;
+		  }
+	  }
+  }
+  clearComplete() {
+    let items = this.state.items;
+    for (let i = 0, length = items.length; i < length; ++i) {
+      if (items[i][2] === true) {
+        items.splice(i, 1);
+        --length; --i;
+      }
+    }
+    this.setState({items: items});
+  }
+  myMap(item) {
+    if (shouldShow(this.state.selected, item[2]))
+      return (<TodoItem key={item[0]} data_id={item[0]} content={item[1]} completed={item[2]} check={this.check} destroy={this.destroy} />);
+    return null;
+  }
+  changeSelected(e) {
+    let i = 2, button = e.target.innerHTML;
+    console.log(e.target);
+    if (button === "All")
+      i = 0;
+    else if (button === "Active")
+      i = 1;
+    console.log(i);
+    console.log(button);
+    this.setState({selected: i});
+  }
+  selectAll(e) {
+    let select = e.target.checked;
+    let items = this.state.items;
+    for (let i = 0, length = items.length; i < length; ++i)
+      items[i][2] = select;
+    if (select === true)
+      this.state.uncomplete = 0;
+    else
+      this.state.uncomplete = items.length;
+    this.setState({items: items});
+  }
+  render() {
+    let selected=["", "", ""];
+    selected[this.state.selected] = "selected";
+    let theSelectedState = this.state.selected;
+    return (
+      <section className="todoapp">
+        <header className="header">
+				    <h1>todos</h1>
+    				<input className="new-todo" placeholder="What needs to be done?" autofocus onKeyPress={this.update}/>
+  			</header>
+			  <section className="main">
+				    <input ref="selectAllInput" className="toggle-all" type="checkbox" onClick={this.selectAll} />
+				    <label htmlFor="toggle-all">Mark all as complete</label>
+				    <ul ref="todo_list" className="todo-list">
+              {this.state.items.map(this.myMap)}
+            </ul>
+			  </section>
+			  <footer className="footer">
+				    <span className="todo-count">{refreshCount(this.state.uncomplete)}</span>
+            <ul className="filters">
+              <li onClick={this.changeSelected}><a className={selected[0]}>All</a></li>
+              <li onClick={this.changeSelected}><a className={selected[1]}>Active</a></li>
+              <li onClick={this.changeSelected}><a className={selected[2]}>Completed</a></li>
+            </ul>
+				    <button className="clear-completed" onClick={this.clearComplete}>Clear completed</button>
+			  </footer>
+      </section>
+    );
+  }
+}
+
+class TodoItem extends React.Component {
+  constructor() {
+    super();
+    this.click = this.click.bind(this);
+    this.destroy = this.destroy.bind(this);
+  }
+  click(e) {
+    let checked = e.target.checked;
+    this.props.check(this.props.data_id, checked);
+  }
+  destroy() {
+    this.props.destroy(this.props.data_id);
+  }
+  render() {
+    return (
+      <li className={this.props.completed ? "completed" : ""}>
+        <div className="view change-color">
+          <input className="toggle" type="checkbox" onClick={this.click} checked={this.props.completed}></input>
+          <label>{this.props.content}</label>
+          <button className="destroy" onClick={this.destroy}></button>
+        </div>
+      </li>
+    );
+  }
+}
+function shouldShow(selected, completed) {
+  return (selected === 0 || 
+          (selected === 1 && completed === false) || 
+          (selected === 2 && completed === true));
+}
+function getTimeInMilli() {
+	var d = new Date();
+	return d.getTime();
+}
+function refreshCount(count) {
+	if (count === 0)
+		return 'no item';
+	else if (count === 1)
+		return '1 item left';
+	else
+		return '' + count + ' items left';
+}
+
+ReactDOM.render(<TodoApp />, document.getElementById('root'));
