@@ -15,14 +15,14 @@ router.get('/user/:name/:id', function (req, res) {
   res.send(req.params.name + " welcome back!");
 });	
 
-router.get('/yo', function(req, res) {
-  res.send('YoYo');
+router.get('/', function(req, res) {
+  res.send('<h1>首頁</h1>');
 });
 
 router.get('/ya', function(req, res) {
   res.send('YaYa');
 });
 
-//app.use('/', router);
+app.use('/', router);
 
 app.listen(3000);
