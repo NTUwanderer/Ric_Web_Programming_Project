@@ -76,7 +76,7 @@ app.use(function(req, res, next) {
 
 app.use(function(err, req, res, next) {
 	console.log("error occurs..." + err.message);
-	res.status(err.status || 500);
+	//res.status(err.status || 500);
 	res.render('error', {
 		title: "Error",
 		message: err.message,
