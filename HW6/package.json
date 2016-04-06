@@ -1,0 +1,14 @@
+{
+  "name": "hw6_test",
+  "version": "1.0.0",
+  "description": "for test only",
+  "main": "entry.js",
+  "scripts": {
+    "test": "none"
+  },
+  "author": "Harvey Yang",
+  "license": "ISC",
+  "dependencies": {
+    "webpack-dev-server": "^1.14.1"
+  }
+}
