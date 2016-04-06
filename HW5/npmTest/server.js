@@ -42,10 +42,14 @@ router.get('/api/query/', function(req, res) {
 router.post('/api/body/', function(req, res) {
 	res.send(JSON.stringify(req.body));
 });
-router.get('/api/user/:id', function (req, res) {
+router.get('/api/user/:id', function (req, res, next) {
 	var user = getUserById(Number(req.params.id));
-	if (user === null)
-		res.send("Cannot find the user with id: " + req.params.id);
+	if (user === null) {
+		var err = new Error();
+		err.status = 404;
+		err.message = "Cannot find the user with id: " + req.params.id;
+		next(err);
+	}
 	else
 		res.json(user);
 });
