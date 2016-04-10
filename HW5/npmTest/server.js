@@ -70,17 +70,16 @@ router.get('/api/user/:id', function (req, res, next) {
 // });
 
 app.use('/', router);
-
 app.use(function(req, res, next) {
 	console.log("First...");
 	var err = new Error();
 	err.status = 404;
 	next(err);
 });
-
 app.use(function(err, req, res, next) {
 	console.log("error occurs..." + err.message);
-	//res.status(err.status || 500);
+	res.status(err.status || 500);
+	console.log(err.status);
 	res.render('error', {
 		title: "Error",
 		message: err.message,
