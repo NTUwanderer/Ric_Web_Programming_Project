@@ -8,6 +8,7 @@ class ThreadItem extends React.Component {
   constructor() {
     super();
     this.click = this.click.bind(this);
+    this.userProfile = this.userProfile.bind(this);
   }
   getTime(timeInMilli) {
     if (timeInMilli === null) return null;
@@ -41,6 +42,9 @@ class ThreadItem extends React.Component {
   click() {
     this.props.changeTalkingTo(this.props.info.name);
   }
+  userProfile() {
+    this.props.clickProfile(this.props.info.name);
+  }
   render() {
     // html -> jsx
     return (
@@ -48,7 +52,7 @@ class ThreadItem extends React.Component {
         <a className="_1ht5 _5l-3" onClick={this.click}>
           <div className="clearfix">
             <div className="thread-item_left">
-              <img className="img-circle" src={this.props.info.photo} width="50" height="50" alt="" />
+              <img className="img-circle" onClick={this.userProfile} src={this.props.info.photo} width="50" height="50" alt="" />
             </div>
             <div className="thread-item_right">
               <div className="thread-from">{this.props.info.name}</div>

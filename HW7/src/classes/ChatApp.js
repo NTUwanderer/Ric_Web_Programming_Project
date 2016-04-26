@@ -4,6 +4,13 @@ import MessageItem from './MessageItem';
 
 
 class ChatApp extends React.Component {
+  static contextTypes = {
+    router: React.PropTypes.object.isRequired
+  };
+
+  componentWillMount() {
+    this.forceUpdate();
+  }
   constructor() {
     super();
     this.state = {
@@ -15,11 +22,19 @@ class ChatApp extends React.Component {
         {name: "Marshall", photo: "http://lorempixel.com/50/50/people/7", messages: [{message: "Hi, I'm Harvey.", me: true, time: 1450864895000}, {message: "Hello, I'm Marshall", me: false, time: 1450964349020}]}
       ]
     };
+    this.handleClick = this.handleClick.bind(this);
     this.findPersonByName = this.findPersonByName.bind(this);
     this.changeTalkingTo = this.changeTalkingTo.bind(this);
     this.update = this.update.bind(this);
     this.addMessage = this.addMessage.bind(this);
   }
+
+  handleClick(name) {
+    console.log("handleClick: " + name);
+    const { router } = this.context;
+    router.push(`/users/${name}`);
+  }
+
   findPersonByName(name) {
     let friends = this.state.friends;
     for (let i = 0, length = friends.length; i < length; ++i)
@@ -79,7 +94,7 @@ class ChatApp extends React.Component {
             <h3 className="messenger-title">Messenger</h3>
           </div>
           <div className="thread-list">{
-              people.map(person => <ThreadItem key={person.name} info={person} changeTalkingTo={this.changeTalkingTo} />, this)
+              people.map(person => <ThreadItem key={person.name} info={person} changeTalkingTo={this.changeTalkingTo} clickProfile={this.handleClick} />, this)
          }</div>
         </div>
         <div className="chat-app_message">
