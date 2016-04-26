@@ -2,9 +2,3 @@
 *.zip
 node_modules
 *.swp
-./index.html
-./prev.html
-./params.json
-./javascripts
-./stylesheets
-./images
