@@ -7,6 +7,7 @@ import NotFound from './classes/NotFound.js';
 import Users from './classes/Users.js';
 import User from './classes/User.js';
 import './chatroom.css';
+import './classes/User.css'
 
 render(
   <Router history={browserHistory}>
