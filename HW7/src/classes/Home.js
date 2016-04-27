@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 
 class Home extends React.Component {
 	render() {
-		return (<Link to="/chat">Click to enter Chatroom..</Link>);
+		return (<Link to="/chat">Click to enter Chatroom...</Link>);
 	}
 }
 

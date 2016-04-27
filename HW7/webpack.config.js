@@ -7,7 +7,15 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js',  // 輸出的檔案名稱
+    publicPath: '/static/'
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        'NODE_ENV': JSON.stringify('production')
+      }
+    })
+  ],
   module: {
     loaders: [{
         test: /\.css$/,
