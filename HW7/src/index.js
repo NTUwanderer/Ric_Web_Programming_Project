@@ -14,9 +14,8 @@ render(
     <Route path="/">
     	<IndexRoute component={Home} />
       <Route path="/chat" component={TodoApp}/>
-      <Route path="/users">
-        <IndexRoute component={Users} />
-	      <Route path=":username" component={User} />
+      <Route path="/users/:username" component={User}>
+        
 	    </Route>
       <Route path="*" component={NotFound} />
     </Route>
