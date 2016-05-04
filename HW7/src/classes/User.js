@@ -18,8 +18,8 @@ let Infos = [
 
 class User extends React.Component {
 	static contextTypes = {
-    router: React.PropTypes.object.isRequired
-  };
+   	router: React.PropTypes.object.isRequired
+ 	};
 
 	componentDidMount() {
 	    this.setState({
@@ -27,6 +27,7 @@ class User extends React.Component {
 	    })
 	}
 
+<<<<<<< HEAD
   componentWillMount() {
     this.forceUpdate();
   }
@@ -50,6 +51,7 @@ class User extends React.Component {
     const { router } = this.context;
     router.push(`/users/${name}`);
   }
+
   clickFollowingHandler(name) {
   	function func() {
       this.clickFollowing(name);
