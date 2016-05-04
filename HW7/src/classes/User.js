@@ -18,8 +18,8 @@ let Infos = [
 
 class User extends React.Component {
 	static contextTypes = {
-    router: React.PropTypes.object.isRequired
-  };
+    	router: React.PropTypes.object.isRequired
+  	};
 
 	componentDidMount() {
 	    this.setState({
@@ -27,9 +27,9 @@ class User extends React.Component {
 	    })
 	}
 
-  componentWillMount() {
-    this.forceUpdate();
-  }
+  	componentWillMount() {
+    	this.forceUpdate();
+  	}
 
 	constructor() {
 		super();
@@ -46,17 +46,17 @@ class User extends React.Component {
 	}
 
 	clickFollowing(name) {
-    console.log("handleClick: " + name);
-    const { router } = this.context;
-    router.push(`/users/${name}`);
-  }
-  clickFollowingHandler(name) {
-  	function func() {
-      this.clickFollowing(name);
-    }
-    func = func.bind(this);
-    return func;
-  }
+    	console.log("handleClick: " + name);
+    	const { router } = this.context;
+    	router.push(`/users/${name}`);
+  	}
+  	clickFollowingHandler(name) {
+  		function func() {
+      		this.clickFollowing(name);
+    	}
+    	func = func.bind(this);
+    	return func;
+  	}
 
 	getPerson(name) {
 		for (let i = 0, length = Infos.length; i < length; ++i)
