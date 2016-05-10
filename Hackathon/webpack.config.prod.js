@@ -1,8 +1,8 @@
-var path = require('path');
-var webpack = require('webpack');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
+const path = require('path');
+const webpack = require('webpack');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-var config = {
+const config = {
   devtool: 'source-map',
   entry: './src/index',
   output: {
@@ -10,21 +10,33 @@ var config = {
     filename: 'bundle.js',
     publicPath: '/public/',
   },
+  eslint: {
+    configFile: '.eslintrc.json',
+  },
   module: {
-    loaders: [{
-      test: /\.js$/,
-      loaders: ['babel'],
-      include: path.join(__dirname, 'src'),
-    }, {
-      test: /\.css$/,
-      loader: ExtractTextPlugin.extract('style-loader', 'css-loader'),
-    }],
+    preLoaders: [
+      {
+        test: /\.js$/,
+        loader: 'eslint-loader',
+        exclude: /node_modules/,
+      },
+    ],
+    loaders: [
+      {
+        test: /\.js$/,
+        loaders: ['babel'],
+        include: path.join(__dirname, 'src'),
+      }, {
+        test: /\.css$/,
+        loader: ExtractTextPlugin.extract('style-loader', 'css-loader'),
+      },
+    ],
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env':{
-        'NODE_ENV': JSON.stringify('production')
-      }
+      'process.env': {
+        NODE_ENV: JSON.stringify('production'),
+      },
     }),
     new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.optimize.UglifyJsPlugin({
@@ -34,7 +46,7 @@ var config = {
       },
     }),
     new ExtractTextPlugin('style.css', { allChunks: true }),
-  ]
+  ],
 };
 
 module.exports = config;

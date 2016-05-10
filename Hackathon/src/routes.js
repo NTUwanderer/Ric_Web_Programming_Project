@@ -8,8 +8,8 @@ export default (
   <Route path="/">
     <IndexRedirect to="/users" />
     <Route path="/users">
-    	<IndexRoute component={UsersPage} />
-    	<Route path=":username" component={SingleUserPage} />
+      <IndexRoute component={UsersPage} />
+      <Route path=":username" component={SingleUserPage} />
     </Route>
     <Route path="*" component={NotFoundPage} />
   </Route>

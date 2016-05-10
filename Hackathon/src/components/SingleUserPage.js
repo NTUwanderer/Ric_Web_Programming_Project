@@ -3,10 +3,14 @@ import classNames from 'classnames';
 import './SingleUserPage.css';
 
 class SingleUserPage extends Component {
+  static contextTypes = {
+    router: React.PropTypes.object.isRequired
+  };
+
   constructor(props, context) {
     super(props, context);
     this.state = {
-      user: "None",
+      user: 'None',
       err: null,
       username: null
     };
@@ -16,10 +20,6 @@ class SingleUserPage extends Component {
     this.clickIndexHandler = this.clickIndexHandler.bind(this);
     this.refresh = this.refresh.bind(this);
   }
-
-  static contextTypes = {
-    router: React.PropTypes.object.isRequired
-  };
 
   componentWillMount() {
     this.forceUpdate();
