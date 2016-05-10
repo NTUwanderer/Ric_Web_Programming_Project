@@ -1,6 +1,16 @@
 {
-    "extends": "airbnb",
-    "plugins": [
-        "react",
-    ]
+  "parser": "babel-eslint",
+  "extends": "airbnb",
+  "plugins": [
+    "react"
+  ],
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true
+  },
+  "rules": {
+    "no-console": 0,
+    "no-else-return": 0
+  }
 }
