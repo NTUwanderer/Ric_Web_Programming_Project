@@ -3,6 +3,7 @@ import 'babel-polyfill';
 import fetch from 'isomorphic-fetch';
 
 import RoomList from './RoomList';
+import AddList from './AddList';
 
 class Lobby extends Component {
   static contextTypes = {
@@ -41,7 +42,7 @@ class Lobby extends Component {
   }
 
   render() {
-    console.log(this.state.users);
+    console.log('Lobby: ', this.props.params.username);
     return (
       <div>
         <table className="table">
@@ -54,6 +55,7 @@ class Lobby extends Component {
             </tr>
           </thead>
           <tbody>
+            <AddList username={this.props.params.username} click={this.handleClick} />
             {
               this.state.rooms.map(
                 (room) => {

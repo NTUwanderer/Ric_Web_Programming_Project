@@ -1,5 +1,6 @@
 import React from 'react';
 import { Route, IndexRedirect, IndexRoute } from 'react-router';
+import App from './components/App';
 import LogIn from './components/LogIn';
 import Lobby from './components/Lobby';
 import Room from './components/Room';
@@ -10,7 +11,7 @@ export default (
     <IndexRoute component={LogIn} />
     <Route path=":username">
       <IndexRedirect to="lobby" />
-      <Route path="lobby">
+      <Route path="lobby" component={App}>
         <IndexRoute component={Lobby} />
         <Route path=":roomname">
           <IndexRoute component={Room} />
