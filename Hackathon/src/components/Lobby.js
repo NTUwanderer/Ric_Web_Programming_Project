@@ -38,7 +38,7 @@ class Lobby extends Component {
   handleClick(roomname) {
     console.log('handleClick: ', roomname);
     const { router } = this.context;
-    router.push(`${this.props.params.username}/lobby/${roomname}`);
+    router.push(`/${this.props.params.username}/lobby/${roomname}`);
   }
 
   render() {

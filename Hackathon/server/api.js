@@ -50,8 +50,24 @@ router.get('/rooms/', (req, res) => {
   res.json(rooms);
 });
 
+router.get('/rooms/:roomname', (req, res) => {
+  let index = -1;
+  for (let i = 0, length = rooms.length; i < length; ++i) {
+    if (req.params.roomname === rooms[i].name) {
+      index = i;
+      break;
+    }
+  }
+  if (index === -1) {
+    res.status(404);
+    res.json('Not Found...');
+  } else {
+    res.status(200);
+    res.json(rooms[index]);
+  }
+});
+
 router.get('/createRoom/:roomname/:username', (req, res) => {
-  console.log(req.params);
   let index = -1;
   for (let i = 0, length = rooms.length; i < length; ++i) {
     if (req.params.roomname === rooms[i].name) {
@@ -65,6 +81,8 @@ router.get('/createRoom/:roomname/:username', (req, res) => {
       name: req.params.roomname,
       owner: req.params.username,
       num_of_people: 0,
+      seats: [null, null, null, null],
+      observers: [],
     });
     saveRooms();
   }

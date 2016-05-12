@@ -2,6 +2,13 @@ import React, { Component } from 'react';
 // import classNames from 'classnames';
 import './SingleUserPage.css';
 
+const fourSeats = [
+  'North',
+  'East',
+  'South',
+  'West',
+];
+
 class Room extends Component {
   static contextTypes = {
     router: React.PropTypes.object.isRequired,
@@ -11,14 +18,15 @@ class Room extends Component {
     super(props, context);
     this.state = {
       name: 'None',
+      owner: 'None',
       seats: [null, null, null, null], // north, east, south, west
-      username: null,
+      username: props.params.username,
+      observers: [],
     };
     this.clickFollowing = this.clickFollowing.bind(this);
     this.clickFollowingHandler = this.clickFollowingHandler.bind(this);
     this.clickIndex = this.clickIndex.bind(this);
     this.clickIndexHandler = this.clickIndexHandler.bind(this);
-    this.refresh = this.refresh.bind(this);
   }
 
   componentWillMount() {
@@ -26,7 +34,27 @@ class Room extends Component {
   }
 
   componentDidMount() {
-    this.refresh();
+    const thisArg = this;
+    fetch(`/api/rooms/${this.props.params.roomname}`)
+      .then((res) => {
+        if (res.status === 404) {
+          const { router } = this.context;
+          router.push(`${this.props.params.username}/lobby`);
+        } else {
+          return res.json();
+        }
+      })
+      .then((json) => {
+        console.log('room: ', json);
+        if (json === "Not Found") {
+          console.log("Error: Not Found but not 404...");
+        } else {
+          thisArg.setState(json);
+        }
+      })
+      .catch((err) => {
+        console.log('err', err);
+      });
   }
 
   clickFollowing(name) {
@@ -54,28 +82,29 @@ class Room extends Component {
     return func;
   }
 
-  refresh() {
-    const username = this.props.params.username;
-    console.log("params.username: " + username);
-    console.log("state.upsername: " + this.state.username);
-    if (username !== this.state.username) {
-      const thisArg = this;
-      fetch('/api/users/' + username)
-        .then(function(res) {
-          return res.json();
-        })
-        .then(function(json) {
-          thisArg.setState({user: json, username: username, err: null});
-        })
-        .catch(function(err) {
-          console.log(err);
-          thisArg.setState({err: err, user: "None"});
-        })
-    }
-  }
-
   render() {
-    return <div>Room</div>;
+    return (
+      <div>
+        <p>{this.state.name}</p>
+        <p>{`Username: ${this.state.username}`}</p>
+        <p>{`Owner: ${this.state.owner}`}</p>
+        <ul>
+          {
+            this.state.seats.map((seat, index) => {
+              return <li><p>{`${fourSeats[index]}: ${seat}`}</p></li>;
+            })
+          }
+        </ul>
+        <p>Observers: </p>
+        <ul>
+          {
+            this.state.observers.map((observer, index) => {
+              return <li><p>{`${index}: ${observer}`}</p></li>;
+            })
+          }
+        </ul>
+      </div>
+    );
   }
 }
 
