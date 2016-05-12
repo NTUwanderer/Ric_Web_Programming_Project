@@ -22,7 +22,8 @@
     "nunjucks": "^2.4.2",
     "react": "^15.0.2",
     "react-dom": "^15.0.2",
-    "react-router": "^2.4.0"
+    "react-router": "^2.4.0",
+    "socket.io-client": "^1.4.6"
   },
   "devDependencies": {
     "babel-eslint": "^6.0.4",
@@ -40,6 +41,7 @@
     "eslint-plugin-react": "^5.1.1",
     "extract-text-webpack-plugin": "^1.0.1",
     "proxy-middleware": "^0.15.0",
+    "socket.io": "^1.4.6",
     "style-loader": "^0.13.1",
     "webpack": "^1.13.0",
     "webpack-dev-middleware": "^1.6.1",

@@ -4,7 +4,7 @@ const express = require('express');
 const webpack = require('webpack');
 const proxy = require('proxy-middleware');
 const config = require('./webpack.config.dev');
-var  nunjucks = require('nunjucks');
+const nunjucks = require('nunjucks');
 require('./server/run');
 
 const API_PORT = 8080;
@@ -17,7 +17,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'nunjucks');
 nunjucks.configure('views', {
   autoescape: true,
-  express: app
+  express: app,
 });
 
 app.use(require('webpack-dev-middleware')(compiler, {
@@ -31,7 +31,7 @@ app.use('/public', express.static('public'));
 app.use('/api', proxy(`http://localhost:${API_PORT}/api`));
 
 app.get('*', (req, res) => {
-	res.render('index');
+  res.render('index');
   // res.sendFile(path.join(__dirname, 'index.html'));
 });
 

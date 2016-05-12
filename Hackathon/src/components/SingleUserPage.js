@@ -10,7 +10,7 @@ class SingleUserPage extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      user: 'None',
+      user: "None",
       err: null,
       username: null
     };
@@ -23,6 +23,10 @@ class SingleUserPage extends Component {
 
   componentWillMount() {
     this.forceUpdate();
+  }
+
+  componentDidMount() {
+    this.refresh();
   }
 
   clickFollowing(name) {
@@ -50,9 +54,6 @@ class SingleUserPage extends Component {
     return func;
   }
 
-  componentDidMount() {
-    this.refresh();
-  }
   refresh() {
     const username = this.props.params.username;
     console.log("params.username: " + username);
@@ -64,11 +65,11 @@ class SingleUserPage extends Component {
           return res.json();
         })
         .then(function(json) {
-          thisArg.setState({user: json, username: username});
+          thisArg.setState({user: json, username: username, err: null});
         })
         .catch(function(err) {
           console.log(err);
-          thisArg.setState({err: err});
+          thisArg.setState({err: err, user: "None"});
         })
     }
   }
@@ -78,7 +79,7 @@ class SingleUserPage extends Component {
 
   render() {
     let user = this.state.user;
-    if (user === "None") {
+    if (user === "None" && this.state.err === null) {
       let message = "No such user with username: " + this.props.params.username;
       if (this.state.err != null)
         message = "Error Message: " + err.message;      
@@ -102,14 +103,14 @@ class SingleUserPage extends Component {
       for (let i = 0, length = icons.length; i < length; ++i) {
         let temp = {};
         if (i < length - 1) {
-          temp =  <div key={i} className="row" style={{textAlign: "center"}}>
+          temp =  (<div key={i} className="row" style={{textAlign: "center"}}>
                     {[icons[i], icons[i + 1]]}
-                  </div>;
+                  </div>);
           ++i;
         } else {
-          temp =  <div key={i} className="row" style={{textAlign: "center"}}>
+          temp =  (<div key={i} className="row" style={{textAlign: "center"}}>
                     {icons[i]}
-                  </div>;
+                  </div>);
         }
         followings.push(temp);
       }

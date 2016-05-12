@@ -1,22 +1,13 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class NotFoundPage extends Component {
-  constructor() {
-    super();
-    this.state = {
-      NotFound: true,
-    };
-  }
-  render() {
-    if (this.state.NotFound) {
-      return (
-        <div>NotFoundPage</div>
-      );
-    }
-    return (
-      <div>Found</div>
-      );
-  }
-}
+// class NotFoundPage extends Component {
+//   render() {
+//     return (
+//       <div>NotFoundPage</div>
+//     );
+//   }
+// }
+
+const NotFoundPage = () => <div>NotFoundPage</div>;
 
 export default NotFoundPage;
