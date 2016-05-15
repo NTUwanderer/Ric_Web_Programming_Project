@@ -5,7 +5,7 @@ const path = require('path');
 const logger = require('morgan');
 const api = require('./api');
 const nunjucks = require('nunjucks');
-
+const bodyParser = require('body-parser');
 const app = express();
 
 const server = require('http').createServer(app);
@@ -36,6 +36,9 @@ nunjucks.configure('views', {
   autoescape: true,
   express: app,
 });
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use(logger('dev'));
 app.use('/public', express.static(path.join(__dirname, '..', 'public')));

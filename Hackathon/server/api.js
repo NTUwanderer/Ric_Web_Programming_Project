@@ -91,24 +91,46 @@ router.get('/createRoom/:roomname/:username', (req, res) => {
   res.json(!found); // succeed = !found
 });
 
-router.get('/users/:username', (req, res) => {
-  let found = false;
-  const index = users.indexOf(req.params.username);
-  if (index > -1) found = true;
-  if (found === false) {
-    users.push(req.params.username);
-    saveUsers();
+router.post('/users', (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
+  console.log('username: ', username);
+  console.log('password: ', password);
+  let index = -1;
+  for (let i = 0, length = users.length; i < length; ++i) {
+    if (username === users[i].username) {
+      index = i;
+      break;
+    }
   }
+  if (req.body.login) {
+    if (index === -1) {
+      res.status(404);
+      res.json('This username does not exist.');
+    } else {
+      if (users[index].password !== password) {
+        res.status(404);
+        res.json('Wrong password.');
+      } else {
+        res.status(200);
+        res.json('Succeed login.');
+      }
+    }
+  } else {
+    if (index === -1) {
+      res.status(200);
+      res.json('Succeed register.');
 
-  res.status(200);
-  res.json(found);
-
-  // if (found === false) {
-  //   const err = new Error();
-  //   err.status = 404;
-  //   err.message = 'No such user with username: ${req.params.username}';
-  //   next(err);
-  // }
+      users.push({
+        username,
+        password,
+      });
+      saveUsers();
+    } else {
+      res.status(404);
+      res.json('Sorry, but this username is already taken.');
+    }
+  }
 });
 
 router.get('/logOut/:username', (req, res) => {

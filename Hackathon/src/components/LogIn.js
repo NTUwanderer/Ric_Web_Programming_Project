@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 import 'babel-polyfill';
 import fetch from 'isomorphic-fetch';
@@ -14,44 +15,61 @@ class LogIn extends Component {
     super(props, context);
 
     this.state = {
-      invalid: false,
+      err: '',
     };
 
-    this.changeUsername = this.changeUsername.bind(this);
-    this.loginRequest = this.loginRequest.bind(this);
-    this.succeedLogIn = this.succeedLogIn.bind(this);
+    this.login = this.login.bind(this);
+    this.register = this.register.bind(this);
+    this.request = this.request.bind(this);
+    this.succeed = this.succeed.bind(this);
   }
 
   componentWillMount() {
     this.forceUpdate();
   }
 
-  changeUsername(e) {
-    if (!e) e = window.event;
-    const keyCode = e.keyCode || e.which;
-    if (keyCode === 13) {
-      const string = e.target.value;
-      console.log(string);
-      if (string !== '') {
-        this.loginRequest(string);
-      }
-      e.target.value = '';
-    }
+  login() {
+    this.request(true);
   }
 
-  loginRequest(username) {
+  register() {
+    this.request(false);
+  }
+
+  request(login) {
+    const username = ReactDOM.findDOMNode(this.refs.username).value;
+    const password = ReactDOM.findDOMNode(this.refs.password).value;
     const thisArg = this;
-    fetch(`/api/users/${username}`)
+
+    fetch('/api/users', {
+      method: 'post',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username, // username: username
+        password, // password: password
+        login,
+      }),
+    })
       .then((res) => {
+        console.log('status: ', res.status);
         return res.json();
       })
-      .then((found) => {
-        console.log('found: ', found);
-        if (found === false) {
-          thisArg.setState({ invalid: false });
-          thisArg.succeedLogIn(username);
-        } else if (found === true) {
-          thisArg.setState({ invalid: true });
+      .then((json) => {
+        if (login) {
+          if (json === 'Succeed login.') {
+            this.succeed(username);
+          } else {
+            thisArg.setState({ err: json });
+          }
+        } else {
+          if (json === 'Succeed register.') {
+            this.succeed(username);
+          } else {
+            thisArg.setState({ err: json });
+          }
         }
       })
       .catch((err) => {
@@ -59,7 +77,7 @@ class LogIn extends Component {
       });
   }
 
-  succeedLogIn(username) {
+  succeed(username) {
     console.log('succeedLogIn: ', username);
     const { router } = this.context;
     router.push(`/${username}`);
@@ -73,17 +91,34 @@ class LogIn extends Component {
             <h2 className="form-page__form-heading">Login</h2>
           </div>
           <div className="form">
-            <div className={classNames('form__error-wrapper', { hidden: !this.state.invalid })}>
+            <div className={classNames('form__error-wrapper', { hidden: (this.state.err === '') })}>
               <p className="form__error form__error--username-taken">
-                Sorry, but this username is already taken.
+                {
+                  this.state.err
+                }
               </p>
             </div>
             <div className="form__field-wrapper">
-              <input className="form__field-input" type="text" placeholder="frank.underwood" onKeyPress={this.changeUsername} />
+              <input
+                ref="username"
+                className="form__field-input"
+                type="text"
+                placeholder="frank.underwood"
+              />
               <label className="form__field-label" htmlFor="username">Username</label>
             </div>
+            <div className="form__field-wrapper">
+              <input
+                ref="password"
+                className="form__field-input"
+                type="password"
+                placeholder="••••••••••"
+              />
+              <label className="form__field-label" htmlFor="password">Password</label>
+            </div>
             <div className="form__submit-btn-wrapper">
-              <button className="form__submit-btn" onClick={this.succeedLogIn}>LogIn</button>
+              <button className="form__submit-btn" onClick={this.login}>LogIn</button>
+              <button className="form__submit-btn" onClick={this.register}>Register</button>
             </div>
           </div>
         </div>
