@@ -1,1 +1,1 @@
-[{"name":"First Room","owner":"Harvey","num_of_people":1,"seats":[null,null,null,null],"observers":["Harvey"]},{"name":"Second Room","owner":"J","num_of_people":0,"seats":[null,null,null,null],"observers":[]},{"name":"Third Room","owner":"John","num_of_people":0,"seats":[null,null,null,null],"observers":[]}]
+[{"name":"Room1","owner":"Harvey","num_of_people":0,"seats":[null,null,null,null],"observers":[]}]

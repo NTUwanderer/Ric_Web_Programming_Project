@@ -16,18 +16,69 @@ const usersfile = './server/users.json';
 
 let rooms = [];
 let users = [];
+let nsp_of_rooms = [];
 const fs = require('fs');
 
-fs.readFile(roomsfile, 'utf8', (err, data) => {
-  if (err) throw err;
-  rooms = JSON.parse(data);
-  console.log(rooms);
+function initializeNsp(nsp) {
+  nsp.on('connection', (socket) => {
+    console.log('someone connected');
+    socket.emit('reply', 'connection received');
+  });
+}
+
+function refreshNsps(tempRooms) {
+  for (let i = 0, length = tempRooms.length; i < length; ++i) {
+    if (i >= rooms.length) {
+      for (let j = i; j < length; ++j) {
+        delete io.nsps[`/${tempRooms[j].name}`];
+      }
+      tempRooms.splice(i, length - i);
+      nsp_of_rooms.splice(i, length - i);
+      break;
+    } else if (tempRooms[i].name !== rooms[i].name) {
+      delete io.nsps[`/${tempRooms[i].name}`];
+      tempRooms.splice(i, 1);
+      nsp_of_rooms.splice(i, 1);
+      --length;
+      --i;
+    }
+  }
+
+  for (let i = tempRooms.length, length = rooms.length; i < length; ++i) {
+    const nsp = io.of(`/${rooms[i].name}`);
+    console.log('nsp: ', nsp);
+    initializeNsp(nsp);
+    nsp_of_rooms.push(nsp);
+  }
+}
+
+function readRooms() {
+  fs.readFile(roomsfile, 'utf8', (err, data) => {
+    if (err) throw err;
+    const tempRooms = rooms;
+    rooms = JSON.parse(data);
+    console.log(rooms);
+    refreshNsps(tempRooms);
+  });
+}
+
+function readUsers() {
+  fs.readFile(usersfile, 'utf8', (err, data) => {
+    if (err) throw err;
+    users = JSON.parse(data);
+    console.log(users);
+  });
+}
+
+readRooms();
+readUsers();
+
+fs.watch(roomsfile, () => {
+  readRooms();
 });
 
-fs.readFile(usersfile, 'utf8', (err, data) => {
-  if (err) throw err;
-  users = JSON.parse(data);
-  console.log(users);
+fs.watch(usersfile, () => {
+  readUsers();
 });
 
 app.set('views', path.join(__dirname, 'views'));
@@ -72,10 +123,15 @@ if (app.get('env') === 'development') {
 }
 
 io.on('connection', (socket) => {
+  console.log('socket: ', socket);
   console.log('connected and emitting...'); // eslint-disable-line no-console
   socket.emit('news', { hello: 'world' });
   socket.on('my other event', (data) => {
     console.log(data); // eslint-disable-line no-console
+  });
+
+  socket.on('disconnect', () => {
+    console.log('disconnected...');
   });
 });
 

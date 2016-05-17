@@ -13,13 +13,11 @@ const fs = require('fs');
 fs.readFile(roomsfile, 'utf8', (err, data) => {
   if (err) throw err;
   rooms = JSON.parse(data);
-  console.log(rooms);
 });
 
 fs.readFile(usersfile, 'utf8', (err, data) => {
   if (err) throw err;
   users = JSON.parse(data);
-  console.log(users);
 });
 
 function saveRooms() {
@@ -35,10 +33,6 @@ function saveUsers() {
     console.log('saveUsers: It\'s saved!');
   });
 }
-
-// const rooms = [
-//   { name: 'First Room', owner: 'Harvey', num_of_people: 1 },
-// ];
 
 router.get('/users/', (req, res) => {
   res.status(200);
