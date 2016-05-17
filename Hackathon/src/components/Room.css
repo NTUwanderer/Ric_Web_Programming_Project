@@ -4,27 +4,33 @@
 }
 
 .top_card {
-	position: relative;
+	position: absolute;
 	top: 0;
-	right: 250px;
+	left: 50%;
+	transform: translateX(-20%);
 }
 
 .right_card {
 	position: absolute;
-	right: 0;
-	margin: auto 0;
+	right: -200px;
+	top: 50%;
+	transform: translateY(-50%);
+	vertical-align: middle;
 }
 
 .bottom_card {
 	position: absolute;
-	button: 0;
-	margin: 0 auto;
+	bottom: 0;
+	left: 50%;
+	transform: translateX(-20%);
 }
 
 .left_card {
 	position: absolute;
 	left: 0;
-	margin: auto 0;
+	top: 50%;
+	transform: translateY(-50%);
+	vertical-align: middle;
 }
 
 .myTable {
@@ -32,4 +38,5 @@
 	width: 500px;
 	height: 500px;
 	border: 1px solid #d3d3d3;
+	position: relative;
 }
