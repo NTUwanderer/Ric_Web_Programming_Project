@@ -17,6 +17,7 @@ const roomsfile = './server/rooms.json';
 const usersfile = './server/users.json';
 
 let rooms = [];
+let socketIds = [];
 let users = [];
 
 const fs = require('fs');
@@ -25,6 +26,10 @@ function readRooms() {
   fs.readFile(roomsfile, 'utf8', (err, data) => {
     if (err) throw err;
     rooms = JSON.parse(data);
+    socketIds = [];
+    for (let i = 0; i < rooms.length; ++i) {
+      socketIds.push([null, null, null, null]);
+    }
     console.log(rooms);
   });
 }
@@ -57,26 +62,118 @@ function createRoom(roomname, username) {
     owner: username,
     num_of_people: 1,
     seats: [null, null, null, null],
+    biddings: [],
+    cards: null,
     observers: [username],
+    status: 'not_yet_started', // bidding,
+    nextMovement: null,
   });
+  socketIds.push([null, null, null, null]);
   saveRooms();
 }
 
-function sitInRoom(roomname, username, index) {
+function getRoomIndexByName(roomname) {
+  for (let i = 0, length = rooms.length; i < length; ++i) {
+    if (roomname === rooms[i].name) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function sitInRoom(socketId, roomIndex, username, index) {
   if (index < 0 || index > 3) {
     return false;
   }
-  let j = -1;
-  for (let i = 0, length = rooms.length; i < length; ++i) {
-    if (roomname === rooms[i].name) {
-      j = i;
-      break;
+  if (roomIndex === -1 || rooms[roomIndex].seats[index] !== null) return false;
+  for (let i = 0; i < rooms[roomIndex].seats.length; ++i) {
+    if (rooms[roomIndex].seats[i] === username) return false;
+  }
+  rooms[roomIndex].seats[index] = username;
+  socketIds[roomIndex][index] = socketId;
+  saveRooms();
+
+  return true;
+}
+
+function randomInteger(maxNum) { // 0 ~ maxNum - 1
+  return Math.floor((Math.random() * maxNum));
+}
+
+function dealTheCards(roomIndex) {
+  if (roomIndex > -1 && roomIndex < socketIds.length) {
+    const deck = [];
+    const suits = [[], [], [], []];
+    const pokerSuits = [];
+    for (let i = 0; i < 52; ++i) {
+      deck.push(i);
+    }
+    for (let i = 0; i < 3; ++i) {
+      const initLength = deck.length;
+      for (let j = 0; j < 13; ++j) {
+        const k = randomInteger(initLength - j);
+        suits[i].push(deck[k]);
+        deck.splice(k, 1);
+      }
+    }
+    suits[3] = deck.slice();
+    for (let i = 0; i < 4; ++i) {
+      suits[i].sort((a, b) => (a - b));
+      const pokerSuit = [[], [], [], []];
+      for (let j = 0; j < 13; ++j) {
+        const theSuit = Math.floor(suits[i][j] / 13);
+        const theNumber = suits[i][j] % 13 + 1;
+        pokerSuit[theSuit].push(theNumber);
+      }
+      pokerSuits.push(pokerSuit);
+    }
+    console.log('suits: ', suits);
+    console.log('pokerSuits: ', pokerSuits);
+
+    for (let i = 0; i < 4; ++i) {
+      io.sockets.connected[socketIds[roomIndex][i]].emit('deal_suit', pokerSuits[i]);
     }
   }
-  if (j === -1 || rooms[j].seats[index] !== null) return false;
+}
 
-  rooms[j].seats[index] = username;
-  return true;
+function checkToDeal(roomIndex) {
+  let shouldDeal = false;
+  if (roomIndex !== -1) {
+    shouldDeal = true;
+    const seats = rooms[roomIndex].seats;
+    const ids = socketIds[roomIndex];
+    for (let i = 0; i < seats.length && i < ids.length; ++i) {
+      if (seats[i] === null || ids[i] === null) {
+        shouldDeal = false;
+        break;
+      }
+    }
+  }
+  if (shouldDeal) {
+    dealTheCards(roomIndex);
+  }
+  return shouldDeal;
+}
+
+function statusChange(roomname, info) {
+  io.to(roomname).emit('status_change', info);
+  const roomIndex = getRoomIndexByName(roomname);
+  if (info === 'start_bidding') {
+    rooms[roomIndex].status = 'bidding';
+  }
+}
+
+function nextMovement(roomname, roomIndex, direction) {
+  io.to(roomname).emit('next_movement', {
+    username: rooms[roomIndex].seats[direction],
+    direction,
+    movement: 'bid',
+  });
+  rooms[roomIndex].nextMovement = direction;
+}
+
+function getBid(roomname, username, data) {
+  console.log('getBid: ', roomname, username, data);
 }
 
 readRooms();
@@ -118,7 +215,9 @@ router.get('/rooms/:roomname', (req, res) => {
     res.json('Not Found...');
   } else {
     res.status(200);
-    res.json(rooms[index]);
+    const tempRoom = rooms[index];
+    tempRoom.cards = null;
+    res.json(tempRoom);
   }
 });
 
@@ -205,6 +304,55 @@ app.use('*', (req, res) => {
   // res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
+io.on('connection', (socket) => {
+  let roomname = '';
+  let username = '';
+  console.log('connected and emitting...'); // eslint-disable-line no-console
+  socket.emit('news', { hello: 'world' });
+
+  socket.on('enter_room_request', data => {
+    console.log(data);
+    socket.join(data.roomname);
+    socket.emit('msg', `You entered ${data.roomname}.`);
+    roomname = data.roomname;
+    username = data.username;
+    console.log('socket: ', socket);
+  });
+
+  socket.on('sit', (data) => {
+    console.log('sit: ', data);
+    console.log('rooms: ', socket.rooms);
+    console.log('roomname: ', roomname);
+    console.log('username: ', username);
+    const roomIndex = getRoomIndexByName(roomname);
+    if (sitInRoom(socket.id, roomIndex, username, data)) {
+      io.to(roomname).emit('someone_sit_down', {
+        username,
+        index: data,
+      });
+      if (checkToDeal(roomIndex)) {
+        statusChange(roomname, 'start_bidding');
+        nextMovement(roomname, roomIndex, 0);
+      }
+    } else {
+      socket.emit('msg', `The seat ${data} is not available.`);
+    }
+  });
+
+  socket.on('bid', (data) => {
+    getBid(roomname, username, data);
+  });
+
+  // socket.join('Room1');
+  // io.to('Room1').emit('msg', 'You entered Room1.');
+  // socket.leave('Room1');
+  // io.to('Room1').emit('msg', 'Are you still there?');
+
+  socket.on('disconnect', () => {
+    console.log('disconnected...');
+  });
+});
+
 // error handlers
 
 // development error handler
@@ -226,45 +374,5 @@ if (app.get('env') === 'development') {
     });
   });
 }
-
-io.on('connection', (socket) => {
-  let roomname = '';
-  let username = '';
-  console.log('connected and emitting...'); // eslint-disable-line no-console
-  socket.emit('news', { hello: 'world' });
-
-  socket.on('enter_room_request', data => {
-    console.log(data);
-    socket.join(data.roomname);
-    socket.emit('msg', `You entered ${data.roomname}.`);
-    roomname = data.roomname;
-    username = data.username;
-    console.log('socket: ', socket);
-  });
-
-  socket.on('sit', data => {
-    console.log('sit: ', data);
-    console.log('rooms: ', socket.rooms);
-    console.log('roomname: ', roomname);
-    console.log('username: ', username);
-    if (sitInRoom(roomname, username, data)) {
-      io.to(roomname).emit('someone_sit_down', {
-        username,
-        index: data,
-      });
-    } else {
-      socket.emit('msg', `The seat ${data} is not available.`);
-    }
-  });
-
-  // socket.join('Room1');
-  // io.to('Room1').emit('msg', 'You entered Room1.');
-  // socket.leave('Room1');
-  // io.to('Room1').emit('msg', 'Are you still there?');
-
-  socket.on('disconnect', () => {
-    console.log('disconnected...');
-  });
-});
 
 module.exports = server;

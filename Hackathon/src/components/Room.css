@@ -5,6 +5,7 @@
 
 .top_card {
 	position: absolute;
+	z-index: -10;
 	top: 0;
 	left: 50%;
 	transform: translateX(-20%);
@@ -12,6 +13,7 @@
 
 .right_card {
 	position: absolute;
+	z-index: -10;
 	right: -200px;
 	top: 50%;
 	transform: translateY(-50%);
@@ -20,6 +22,7 @@
 
 .bottom_card {
 	position: absolute;
+	z-index: -10;
 	bottom: 0;
 	left: 50%;
 	transform: translateX(-20%);
@@ -27,6 +30,7 @@
 
 .left_card {
 	position: absolute;
+	z-index: -10;
 	left: 0;
 	top: 50%;
 	transform: translateY(-50%);
@@ -72,9 +76,13 @@
 	vertical-align: middle;
 }
 .myBoard {
-	margin: 0 auto;
+	margin: 0;
 	width: 700px;
 	height: 600px;
 	border: 1px solid #d3d3d3;
 	position: relative;
+}
+.bid_result {
+	max-width: 30%;
+	right: 0;
 }

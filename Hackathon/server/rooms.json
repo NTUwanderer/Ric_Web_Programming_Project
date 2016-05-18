@@ -1,1 +1,1 @@
-[{"name":"Room1","owner":"Harvey","num_of_people":1,"seats":[null,null,null,null],"observers":["Harvey"]},{"name":"Room2","owner":"Harvey","num_of_people":1,"seats":[null,null,null,null],"observers":["Harvey"]}]
+[{"name":"Room1","owner":"Harvey","num_of_people":1,"seats":["Harvey","John","Marvyn","Justin"],"cards":null,"observers":["Harvey"]}]

@@ -4,13 +4,6 @@ import ReactDOM from 'react-dom';
 
 import './Room.css';
 
-const fourSeats = [
-  'North',
-  'East',
-  'South',
-  'West',
-];
-
 class Room extends Component {
   static contextTypes = {
     router: React.PropTypes.object.isRequired,
@@ -31,10 +24,14 @@ class Room extends Component {
               { suit: 1, number: 1 },
               { suit: 2, number: 11 },
               { suit: 3, number: 13 }],
-
+      biddings: [],
       imgLoaded: false,
       img: <img alt="loading" src="/public/images/cards.png" />,
       socket: roomSocket,
+      mySuit: null,
+      status: 'not_yet_started', // bidding, 
+      nextMovement: null,
+      myTurn: null, // bid
     };
 
     this.clickFollowing = this.clickFollowing.bind(this);
@@ -53,6 +50,9 @@ class Room extends Component {
     this.sitHandler = this.sitHandler.bind(this);
 
     this.afterLoadRoomInfo = this.afterLoadRoomInfo.bind(this);
+
+    this.setSevenLevels = this.setSevenLevels.bind(this);
+    this.bid = this.bid.bind(this);
   }
 
   componentWillMount() {
@@ -65,7 +65,7 @@ class Room extends Component {
       .then((res) => {
         if (res.status === 404) {
           const { router } = this.context;
-          router.push(`${this.props.params.username}/lobby`);
+          router.push(`/${this.props.params.username}/lobby`);
           return 'Not Found';
         } else {
           return res.json();
@@ -227,6 +227,32 @@ class Room extends Component {
         this.setState({ seats });
       }
     }, this);
+    socket.on('deal_suit', (data) => {
+      console.log('suit: ', data);
+      this.setState({ mySuit: data });
+    }, this);
+    socket.on('status_change', (data) => {
+      switch (data) {
+        case 'start_bidding':
+          this.setState({ status: 'bidding' });
+          break;
+        default:
+          break;
+      }
+    }, this);
+    socket.on('next_movement', (data) => {
+      console.log('next_movement: ', data);
+      const state = this.state;
+      state.nextMovement = data.direction;
+      if (data.username === state.username) {
+        if (data.movement === 'bid') {
+          state.myTurn = 'bid';
+        }
+      } else {
+        state.myTurn = null;
+      }
+      this.setState(state);
+    }, this);
   }
 
   sit(index) {
@@ -253,17 +279,56 @@ class Room extends Component {
     );
   }
 
+  bid(e) {
+    if (this.state.status === 'bidding' && this.state.myTurn === 'bid') {
+      const string = e.target.innerHTML;
+      const level = Number(string.slice(0, 1));
+      const suitInWord = string.slice(1);
+      let suit = 0;
+      for (let i = 0; i < 5; ++i) {
+        if (suitInWord === this.props.suitsInWords[i]) {
+          suit = i;
+          break;
+        }
+      }
+      this.state.socket.emit('bid', {
+        level,
+        suit,
+      });
+    }
+  }
+
+  setSevenLevels() {
+    const levels = [];
+    for (let i = 0; i < 7; ++i) {
+      const tds = [];
+      for (let j = 0; j < 5; ++j) {
+        const td = (<td className="col-md-2" onClick={this.bid}><p>
+          {`${i + 1}${this.props.suitsInWords[j]}`}
+        </p></td>);
+        tds.push(td);
+      }
+      const tr = <tr>{tds}</tr>;
+
+      levels.push(tr);
+    }
+    return levels;
+  }
+
   render() {
     // let cards = [];
     // for (let i = 0; i < this.state.cards.length; ++i) {
     //   cards.push(this.showCard(i));
     // }
-
+    const seats = this.state.seats;
+    if (this.state.nextMovement !== null) {
+      seats[this.state.nextMovement] += '*';
+    }
     return (
       <div>
         <div className="myBoard">
           {
-            this.state.seats.map((seat, index) =>
+            seats.map((seat, index) =>
               <p key={`seat${index}`} className={`seat${index}`}>
                 {
                   seat !== null ? seat
@@ -279,8 +344,62 @@ class Room extends Component {
             <canvas ref="left_card" className="poker_card left_card" />
           </div>
         </div>
+
+        <div className="container bid_result">
+          <h2>Bidding Result</h2>
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th className="col-md-3">North</th>
+                <th className="col-md-3">East</th>
+                <th className="col-md-3">South</th>
+                <th className="col-md-3">West</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                this.state.biddings.map((row) => (
+                  <tr>
+                    <td className="col-md-3"><p>
+                      {`${row[0].level}${this.props.suitsInWords[row[0].suit]}`}
+                    </p></td>
+                    <td className="col-md-3"><p>
+                      {`${row[1].level}${this.props.suitsInWords[row[1].suit]}`}
+                    </p></td>
+                    <td className="col-md-3"><p>
+                      {`${row[2].level}${this.props.suitsInWords[row[2].suit]}`}
+                    </p></td>
+                    <td className="col-md-3"><p>
+                      {`${row[3].level}${this.props.suitsInWords[row[3].suit]}`}
+                    </p></td>
+                  </tr>
+                ), this)
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div className="container bid_result">
+          <h2>My Bidding Table</h2>
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th className="col-md-2">Club</th>
+                <th className="col-md-2">Diamond</th>
+                <th className="col-md-2">Heart</th>
+                <th className="col-md-2">Spade</th>
+                <th className="col-md-2">NT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                this.setSevenLevels()
+              }
+            </tbody>
+          </table>
+        </div>
+
         <p><button onClick={this.showCards}>Try it</button></p>
-        <p><button onClick={this.enterRoomRequest}>Socket Test</button></p>
       </div>
     );
   }
@@ -291,6 +410,7 @@ Room.propTypes = {
   img_height: React.PropTypes.number,
   canvas_width: React.PropTypes.number,
   canvas_height: React.PropTypes.number,
+  suitsInWords: React.PropTypes.array,
 };
 
 Room.defaultProps = {
@@ -298,6 +418,15 @@ Room.defaultProps = {
   img_height: 315,
   canvas_width: 100,
   canvas_height: 140,
+  fourSeats: [
+    'North',
+    'East',
+    'South',
+    'West',
+  ],
+  suitsInWords: [
+    'C', 'D', 'H', 'S', 'NT',
+  ],
 };
 
 export default Room;
