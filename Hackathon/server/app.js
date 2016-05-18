@@ -19,33 +19,13 @@ const usersfile = './server/users.json';
 let rooms = [];
 let users = [];
 
-let nsp_of_rooms = [];
 const fs = require('fs');
-
-function initializeNsp(roomname) {
-  const nsp = io.of(`/${roomname}`);
-  console.log('nsp: ', nsp);
-  nsp.on('connection', (socket) => {
-    console.log('someone connected');
-    socket.emit('reply', 'connection received');
-  });
-
-  nsp_of_rooms.push(nsp);
-}
-
-
-function initializeNsps() {
-  for (let i = 0, length = rooms.length; i < length; ++i) {
-    initializeNsp(rooms[i].name);
-  }
-}
 
 function readRooms() {
   fs.readFile(roomsfile, 'utf8', (err, data) => {
     if (err) throw err;
     rooms = JSON.parse(data);
     console.log(rooms);
-    initializeNsps();
   });
 }
 
@@ -79,8 +59,24 @@ function createRoom(roomname, username) {
     seats: [null, null, null, null],
     observers: [username],
   });
-  initializeNsp(roomname);
   saveRooms();
+}
+
+function sitInRoom(roomname, username, index) {
+  if (index < 0 || index > 3) {
+    return false;
+  }
+  let j = -1;
+  for (let i = 0, length = rooms.length; i < length; ++i) {
+    if (roomname === rooms[i].name) {
+      j = i;
+      break;
+    }
+  }
+  if (j === -1 || rooms[j].seats[index] !== null) return false;
+
+  rooms[j].seats[index] = username;
+  return true;
 }
 
 readRooms();
@@ -232,13 +228,33 @@ if (app.get('env') === 'development') {
 }
 
 io.on('connection', (socket) => {
+  let roomname = '';
+  let username = '';
   console.log('connected and emitting...'); // eslint-disable-line no-console
   socket.emit('news', { hello: 'world' });
 
   socket.on('enter_room_request', data => {
     console.log(data);
-    socket.join(data);
-    socket.emit('msg', `You entered ${data}.`);
+    socket.join(data.roomname);
+    socket.emit('msg', `You entered ${data.roomname}.`);
+    roomname = data.roomname;
+    username = data.username;
+    console.log('socket: ', socket);
+  });
+
+  socket.on('sit', data => {
+    console.log('sit: ', data);
+    console.log('rooms: ', socket.rooms);
+    console.log('roomname: ', roomname);
+    console.log('username: ', username);
+    if (sitInRoom(roomname, username, data)) {
+      io.to(roomname).emit('someone_sit_down', {
+        username,
+        index: data,
+      });
+    } else {
+      socket.emit('msg', `The seat ${data} is not available.`);
+    }
   });
 
   // socket.join('Room1');

@@ -19,11 +19,7 @@ class Room extends Component {
   constructor(props, context) {
     super(props, context);
 
-    const socket = io.connect('http://localhost:8080/');
-    socket.on('msg', (data) => {
-      console.log('reply: ', data);
-    });
-
+    const roomSocket = io.connect('http://localhost:8080/');
 
     this.state = {
       name: 'None',
@@ -38,7 +34,7 @@ class Room extends Component {
 
       imgLoaded: false,
       img: <img alt="loading" src="/public/images/cards.png" />,
-      socket,
+      socket: roomSocket,
     };
 
     this.clickFollowing = this.clickFollowing.bind(this);
@@ -49,11 +45,14 @@ class Room extends Component {
     this.showCards = this.showCards.bind(this);
     this.getBlankCard = this.getBlankCard.bind(this);
     this.getCard = this.getCard.bind(this);
-    this.socketTest = this.socketTest.bind(this);
+
+    this.socketListeners = this.socketListeners.bind(this);
+
+    this.enterRoomRequest = this.enterRoomRequest.bind(this);
     this.sit = this.sit.bind(this);
     this.sitHandler = this.sitHandler.bind(this);
 
-    this.socketTest();
+    this.afterLoadRoomInfo = this.afterLoadRoomInfo.bind(this);
   }
 
   componentWillMount() {
@@ -78,6 +77,8 @@ class Room extends Component {
           console.log('Error: Not Found but not 404...');
         } else {
           thisArg.setState(json);
+          console.log(thisArg.state);
+          thisArg.afterLoadRoomInfo();
         }
       })
       .catch((err) => {
@@ -209,6 +210,25 @@ class Room extends Component {
     // return canvas;
   }
 
+  socketListeners() {
+    const socket = this.state.socket;
+    socket.on('msg', (data) => {
+      console.log('msg: ', data);
+    });
+    socket.on('someone_sit_down', (data) => {
+      const seats = this.state.seats;
+      console.log('someone_sit_down: ', data);
+      if (seats[data.index] !== null) {
+        console.log('conflict: ', data.index,
+          ' ', seats[data.index],
+          ' ', data.username);
+      } else {
+        seats[data.index] = data.username;
+        this.setState({ seats });
+      }
+    }, this);
+  }
+
   sit(index) {
     this.state.socket.emit('sit', index);
   }
@@ -216,13 +236,21 @@ class Room extends Component {
   sitHandler(index) {
     function func() {
       this.sit(index);
+      console.log('Hey');
     }
     func = func.bind(this);
     return func;
   }
 
-  socketTest() {
-    this.state.socket.emit('enter_room_request', this.state.name);
+  afterLoadRoomInfo() {
+    this.enterRoomRequest();
+    this.socketListeners();
+  }
+
+  enterRoomRequest() {
+    this.state.socket.emit('enter_room_request',
+      { roomname: this.state.name, username: this.state.username }
+    );
   }
 
   render() {
@@ -236,7 +264,7 @@ class Room extends Component {
         <div className="myBoard">
           {
             this.state.seats.map((seat, index) =>
-              <p className={`seat${index}`}>
+              <p key={`seat${index}`} className={`seat${index}`}>
                 {
                   seat !== null ? seat
                   : <button onClick={this.sitHandler(index)}>Sit</button>
@@ -252,7 +280,7 @@ class Room extends Component {
           </div>
         </div>
         <p><button onClick={this.showCards}>Try it</button></p>
-        <p><button onClick={this.socketTest}>Socket Test</button></p>
+        <p><button onClick={this.enterRoomRequest}>Socket Test</button></p>
       </div>
     );
   }
