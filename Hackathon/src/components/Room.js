@@ -18,6 +18,13 @@ class Room extends Component {
 
   constructor(props, context) {
     super(props, context);
+
+    const socket = io.connect('http://localhost:8080/');
+    socket.on('msg', (data) => {
+      console.log('reply: ', data);
+    });
+
+
     this.state = {
       name: 'None',
       owner: 'None',
@@ -31,6 +38,7 @@ class Room extends Component {
 
       imgLoaded: false,
       img: <img alt="loading" src="/public/images/cards.png" />,
+      socket,
     };
 
     this.clickFollowing = this.clickFollowing.bind(this);
@@ -41,6 +49,11 @@ class Room extends Component {
     this.showCards = this.showCards.bind(this);
     this.getBlankCard = this.getBlankCard.bind(this);
     this.getCard = this.getCard.bind(this);
+    this.socketTest = this.socketTest.bind(this);
+    this.sit = this.sit.bind(this);
+    this.sitHandler = this.sitHandler.bind(this);
+
+    this.socketTest();
   }
 
   componentWillMount() {
@@ -196,6 +209,22 @@ class Room extends Component {
     // return canvas;
   }
 
+  sit(index) {
+    this.state.socket.emit('sit', index);
+  }
+
+  sitHandler(index) {
+    function func() {
+      this.sit(index);
+    }
+    func = func.bind(this);
+    return func;
+  }
+
+  socketTest() {
+    this.state.socket.emit('enter_room_request', this.state.name);
+  }
+
   render() {
     // let cards = [];
     // for (let i = 0; i < this.state.cards.length; ++i) {
@@ -204,13 +233,26 @@ class Room extends Component {
 
     return (
       <div>
-        <div className="myTable">
-          <canvas ref="top_card" className="poker_card top_card" />
-          <canvas ref="right_card" className="poker_card right_card" />
-          <canvas ref="bottom_card" className="poker_card bottom_card" />
-          <canvas ref="left_card" className="poker_card left_card" />
+        <div className="myBoard">
+          {
+            this.state.seats.map((seat, index) =>
+              <p className={`seat${index}`}>
+                {
+                  seat !== null ? seat
+                  : <button onClick={this.sitHandler(index)}>Sit</button>
+                }
+              </p>
+            , this)
+          }
+          <div className="myTable">
+            <canvas ref="top_card" className="poker_card top_card" />
+            <canvas ref="right_card" className="poker_card right_card" />
+            <canvas ref="bottom_card" className="poker_card bottom_card" />
+            <canvas ref="left_card" className="poker_card left_card" />
+          </div>
         </div>
         <p><button onClick={this.showCards}>Try it</button></p>
+        <p><button onClick={this.socketTest}>Socket Test</button></p>
       </div>
     );
   }

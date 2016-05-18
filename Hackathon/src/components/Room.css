@@ -33,10 +33,48 @@
 	vertical-align: middle;
 }
 
+.seat0 {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-20%);
+}
+
+.seat1 {
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	vertical-align: middle;
+}
+
+.seat2 {
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	transform: translateX(-20%);
+}
+
+.seat3 {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	vertical-align: middle;
+}
+
 .myTable {
-	margin: 0 auto;
+	margin: 50px auto;
 	width: 500px;
 	height: 500px;
+	border: 1px solid #d3d3d3;
+	position: relative;
+	vertical-align: middle;
+}
+.myBoard {
+	margin: 0 auto;
+	width: 700px;
+	height: 600px;
 	border: 1px solid #d3d3d3;
 	position: relative;
 }
