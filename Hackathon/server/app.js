@@ -209,7 +209,8 @@ function bid(roomname, username, data) {
 
   const newBid = { direction: (rooms[roomIndex].nextMovement + 3) % 4, bid: data };
   if (data === 'Pass') {
-    if (rooms[roomIndex].lastBid.direction === rooms[roomIndex].nextMovement) {
+    if (rooms[roomIndex].lastBid !== null &&
+        rooms[roomIndex].lastBid.direction === rooms[roomIndex].nextMovement) {
       shouldEndBidding = true;
     }
   } else {
