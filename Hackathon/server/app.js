@@ -67,6 +67,7 @@ function createRoom(roomname, username) {
     observers: [username],
     status: 'not_yet_started', // bidding,
     nextMovement: null,
+    lastBid: null,
   });
   socketIds.push([null, null, null, null]);
   saveRooms();
@@ -160,6 +161,8 @@ function statusChange(roomname, info) {
   const roomIndex = getRoomIndexByName(roomname);
   if (info === 'start_bidding') {
     rooms[roomIndex].status = 'bidding';
+  } else if (info === 'start_playing') {
+    rooms[roomIndex].status = 'playing';
   }
 }
 
@@ -172,8 +175,103 @@ function nextMovement(roomname, roomIndex, direction) {
   rooms[roomIndex].nextMovement = direction;
 }
 
+function emitBid(roomname, newBid) {
+  io.to(roomname).emit('someone_bid', newBid);
+}
+
+function bid(roomname, username, data) {
+  console.log('bid: ', roomname, username, data);
+  const roomIndex = getRoomIndexByName(roomname);
+  if (roomIndex === -1) {
+    return;
+  }
+
+  let direction = 4;
+  if (rooms[roomIndex].biddings.length !== 0) {
+    for (let i = 3; i >= 0; --i) {
+      if (rooms[roomIndex].biddings[rooms[roomIndex].biddings.length - 1][i] !== null) {
+        direction = i + 1;
+        break;
+      }
+    }
+  }
+
+  console.log('direction: ', direction);
+  console.log('biddings: ', rooms[roomIndex].biddings);
+  if (direction === 4) {
+    rooms[roomIndex].biddings.push([null, null, null, null]);
+    direction = 0;
+  }
+  const length = rooms[roomIndex].biddings.length;
+  rooms[roomIndex].biddings[length - 1][rooms[roomIndex].nextMovement] = data;
+  rooms[roomIndex].nextMovement = (rooms[roomIndex].nextMovement + 1) % 4;
+  let shouldEndBidding = false;
+
+  const newBid = { direction: (rooms[roomIndex].nextMovement + 3) % 4, bid: data };
+  if (data === 'Pass') {
+    if (rooms[roomIndex].lastBid.direction === rooms[roomIndex].nextMovement) {
+      shouldEndBidding = true;
+    }
+  } else {
+    rooms[roomIndex].lastBid = newBid;
+  }
+
+  emitBid(roomname, newBid);
+
+  if (shouldEndBidding) {
+    statusChange(roomname, 'start_playing');
+  } else {
+    nextMovement(roomname, roomIndex, rooms[roomIndex].nextMovement);
+  }
+}
+
 function getBid(roomname, username, data) {
   console.log('getBid: ', roomname, username, data);
+  const roomIndex = getRoomIndexByName(roomname);
+  if (roomIndex === -1) {
+    console.log('room doesn\'t exist: ', roomname);
+    return false;
+  }
+  const room = rooms[roomIndex];
+  if (room.seats[room.nextMovement] !== username) {
+    console.log('not his turn to bid: ', username);
+    return false;
+  } else {
+    const lastBid = room.lastBid;
+    if (data === 'Pass') {
+      return true;
+    } else if (data === 'X') {
+      if ((lastBid.direction % 2) !== room.nextMovement % 2 &&
+          lastBid.bid !== 'X' && lastBid.bid !== 'XX') {
+        return true;
+      } else {
+        return false;
+      }
+    } else if (data === 'XX') {
+      if ((lastBid.direction % 2) !== room.nextMovement % 2 &&
+          lastBid.bid === 'X') {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      let lastValidBidding = null;
+      const biddings = room.biddings;
+      for (let i = biddings.length - 1; i >= 0; --i) {
+        for (let j = 3; j >= 0; --j) {
+          const bidding = biddings[i][j];
+          if (bidding !== null && bidding.suit !== undefined && bidding.level !== undefined) {
+            lastValidBidding = bidding;
+          }
+        }
+      } if (lastValidBidding === null || lastValidBidding.level < data.level ||
+          (lastValidBidding.level === data.level && lastValidBidding.suit < data.suit)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
 }
 
 readRooms();
@@ -340,7 +438,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('bid', (data) => {
-    getBid(roomname, username, data);
+    if (getBid(roomname, username, data)) {
+      bid(roomname, username, data);
+    } else {
+      socket.emit('msg', { message: 'Your bid is not allowed.', bid: data });
+    }
   });
 
   // socket.join('Room1');

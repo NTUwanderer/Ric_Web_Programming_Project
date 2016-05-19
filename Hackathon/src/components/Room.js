@@ -29,9 +29,11 @@ class Room extends Component {
       img: <img alt="loading" src="/public/images/cards.png" />,
       socket: roomSocket,
       mySuit: null,
-      status: 'not_yet_started', // bidding, 
+      status: 'not_yet_started', // bidding,
       nextMovement: null,
       myTurn: null, // bid
+      lastBid: null, // { direction: 0, bid: { suit: 0, level: 1 } }: North 1C,
+                     // { direction: 1, bid: 'X' } don't store Pass
     };
 
     this.clickFollowing = this.clickFollowing.bind(this);
@@ -45,13 +47,16 @@ class Room extends Component {
 
     this.socketListeners = this.socketListeners.bind(this);
 
-    this.enterRoomRequest = this.enterRoomRequest.bind(this);
     this.sit = this.sit.bind(this);
     this.sitHandler = this.sitHandler.bind(this);
 
     this.afterLoadRoomInfo = this.afterLoadRoomInfo.bind(this);
+    this.enterRoomRequest = this.enterRoomRequest.bind(this);
 
     this.setSevenLevels = this.setSevenLevels.bind(this);
+
+    this.getBiddingsInWords = this.getBiddingsInWords.bind(this);
+
     this.bid = this.bid.bind(this);
   }
 
@@ -232,9 +237,13 @@ class Room extends Component {
       this.setState({ mySuit: data });
     }, this);
     socket.on('status_change', (data) => {
+      console.log('status_change: ', data);
       switch (data) {
         case 'start_bidding':
           this.setState({ status: 'bidding' });
+          break;
+        case 'start_playing':
+          this.setState({ status: 'playing' });
           break;
         default:
           break;
@@ -252,6 +261,23 @@ class Room extends Component {
         state.myTurn = null;
       }
       this.setState(state);
+    }, this);
+    socket.on('someone_bid', (data) => {
+      console.log('someone_bid: ', data);
+      const biddings = this.state.biddings;
+      let lastBid = this.state.lastBid;
+
+      console.log('biddings: ', biddings);
+      if (biddings.length === 0 || biddings[biddings.length - 1][data.direction] !== null) {
+        biddings.push([null, null, null, null]);
+      }
+      biddings[biddings.length - 1][data.direction] = data.bid;
+      console.log('biddings: ', biddings);
+      if (data.bid !== 'Pass') {
+        lastBid = data.bid;
+      }
+
+      this.setState({ biddings, lastBid });
     }, this);
   }
 
@@ -279,25 +305,6 @@ class Room extends Component {
     );
   }
 
-  bid(e) {
-    if (this.state.status === 'bidding' && this.state.myTurn === 'bid') {
-      const string = e.target.innerHTML;
-      const level = Number(string.slice(0, 1));
-      const suitInWord = string.slice(1);
-      let suit = 0;
-      for (let i = 0; i < 5; ++i) {
-        if (suitInWord === this.props.suitsInWords[i]) {
-          suit = i;
-          break;
-        }
-      }
-      this.state.socket.emit('bid', {
-        level,
-        suit,
-      });
-    }
-  }
-
   setSevenLevels() {
     const levels = [];
     for (let i = 0; i < 7; ++i) {
@@ -312,7 +319,53 @@ class Room extends Component {
 
       levels.push(tr);
     }
+    const tds = [];
+    tds.push(
+      <td className="col-md-2" onClick={this.bid}><p>
+        Pass
+      </p></td>);
+    tds.push(
+      <td className="col-md-2" onClick={this.bid}><p>
+        X
+      </p></td>);
+    tds.push(
+      <td className="col-md-2" onClick={this.bid}><p>
+        XX
+      </p></td>);
+    levels.push(tds);
     return levels;
+  }
+
+  getBiddingsInWords(bidding) {
+    if (bidding === null || bidding === 'Pass' || bidding === 'X' || bidding === 'XX') {
+      return bidding;
+    }
+    console.log('words: ', bidding);
+    console.log(`${bidding.level}${this.props.suitsInWords[bidding.suit]}`);
+    return `${bidding.level}${this.props.suitsInWords[bidding.suit]}`;
+  }
+
+  bid(e) {
+    if (this.state.status === 'bidding' && this.state.myTurn === 'bid') {
+      const string = e.target.innerHTML;
+      if (string === 'Pass' || string === 'X' || string === 'XX') {
+        this.state.socket.emit('bid', string);
+      } else {
+        const level = Number(string.slice(0, 1));
+        const suitInWord = string.slice(1);
+        let suit = 0;
+        for (let i = 0; i < 5; ++i) {
+          if (suitInWord === this.props.suitsInWords[i]) {
+            suit = i;
+            break;
+          }
+        }
+        this.state.socket.emit('bid', {
+          level,
+          suit,
+        });
+      }
+    }
   }
 
   render() {
@@ -320,7 +373,7 @@ class Room extends Component {
     // for (let i = 0; i < this.state.cards.length; ++i) {
     //   cards.push(this.showCard(i));
     // }
-    const seats = this.state.seats;
+    const seats = this.state.seats.slice();
     if (this.state.nextMovement !== null) {
       seats[this.state.nextMovement] += '*';
     }
@@ -359,20 +412,18 @@ class Room extends Component {
             <tbody>
               {
                 this.state.biddings.map((row) => (
-                  <tr>
-                    <td className="col-md-3"><p>
-                      {`${row[0].level}${this.props.suitsInWords[row[0].suit]}`}
-                    </p></td>
-                    <td className="col-md-3"><p>
-                      {`${row[1].level}${this.props.suitsInWords[row[1].suit]}`}
-                    </p></td>
-                    <td className="col-md-3"><p>
-                      {`${row[2].level}${this.props.suitsInWords[row[2].suit]}`}
-                    </p></td>
-                    <td className="col-md-3"><p>
-                      {`${row[3].level}${this.props.suitsInWords[row[3].suit]}`}
-                    </p></td>
-                  </tr>
+                  <tr>{
+                    row.map((bidding) => {
+                      console.log('row.map.bidding: ', bidding);
+                      console.log('l2', this.state.biddings);
+                      const string = this.getBiddingsInWords(bidding);
+                      console.log('string', string);
+                      return (
+                        <td className="col-md-3"><p>
+                          {string}
+                        </p></td>);
+                    }, this)
+                  }</tr>
                 ), this)
               }
             </tbody>
