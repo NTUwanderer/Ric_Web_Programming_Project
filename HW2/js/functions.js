@@ -39,10 +39,10 @@ function currings(...array) {
 
   	var func = function(...input) {
   		rest -= input.length;
-    	if (rest < 0)  return null;
-    	input.forEach(v => value += v);
-    	if (rest === 0)	return value;
-    	else	return func;
+	    	if (rest < 0)  return null;
+	    	input.forEach(v => value += v);
+	    	if (rest === 0)	return value;
+	    	else	return func;
   	}
 
   	return func(...array);
